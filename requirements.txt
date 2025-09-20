@@ -2,3 +2,9 @@ streamlit
 PyPDF2
 re
 python-docx
+pip==25.2
+streamlit
+numpy
+pillow
+pdfminer.six
+python-docx
