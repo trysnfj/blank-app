@@ -113,9 +113,5 @@ if reset:
         "bold_ratio": 0.5,
         "min_word_len": 3,
     }
-    for k, v in defaults.items():
-        st.session_state[k] = v
-    st.info("Inputs have been reset.")
-
 
 
