@@ -1,4 +1,17 @@
 import streamlit as st
+
+# Defensive safety: replace experimental_rerun with a no-op when present.
+# This prevents AttributeError or crashes if older/deployed code calls
+# st.experimental_rerun() in contexts where it's unsupported.
+try:
+    if hasattr(st, "experimental_rerun"):
+        def _safe_experimental_rerun(*a, **kw):
+            # intentionally do nothing — prefer clearing session state or safe behavior
+            return None
+        st.experimental_rerun = _safe_experimental_rerun
+except Exception:
+    # best-effort: if anything goes wrong here, continue without breaking import
+    pass
 import re
 import PyPDF2
 
