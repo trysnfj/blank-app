@@ -1,8 +1,27 @@
 import streamlit as st
-
-# ...existing code...
 import re
 import PyPDF2
+import os
+import subprocess
+
+# Diagnostic sidebar to help confirm what's running on the deployed host
+try:
+    with st.sidebar:
+        st.markdown("**Salient Reader — diagnostic**")
+        st.markdown("Running file: `Salientreading.py`")
+        # Try to show the current git commit (best-effort; may not be available on host)
+        try:
+            commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=os.getcwd(), stderr=subprocess.DEVNULL).decode().strip()
+            st.markdown(f"Commit: `{commit}`")
+        except Exception:
+            st.markdown("Commit: (not available)")
+        if hasattr(st, "experimental_rerun"):
+            st.warning("Runtime exposes st.experimental_rerun — reset will not call it.")
+        else:
+            st.markdown("st.experimental_rerun: not present")
+except Exception:
+    # avoid breaking the app if sidebar diagnostics fail
+    pass
 
 try:
     from docx import Document
