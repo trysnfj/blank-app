@@ -1,27 +1,6 @@
 import streamlit as st
 import re
 import PyPDF2
-import os
-import subprocess
-
-# Diagnostic sidebar to help confirm what's running on the deployed host
-try:
-    with st.sidebar:
-        st.markdown("**Salient Reader — diagnostic**")
-        st.markdown("Running file: `Salientreading.py`")
-        # Try to show the current git commit (best-effort; may not be available on host)
-        try:
-            commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=os.getcwd(), stderr=subprocess.DEVNULL).decode().strip()
-            st.markdown(f"Commit: `{commit}`")
-        except Exception:
-            st.markdown("Commit: (not available)")
-        if hasattr(st, "experimental_rerun"):
-            st.warning("Runtime exposes st.experimental_rerun — reset will not call it.")
-        else:
-            st.markdown("st.experimental_rerun: not present")
-except Exception:
-    # avoid breaking the app if sidebar diagnostics fail
-    pass
 
 try:
     from docx import Document
@@ -29,12 +8,12 @@ except ModuleNotFoundError:
     Document = None
 
 # -------- Emphasis engine (brand-neutral) --------
-def emphasize_text(text, bold_ratio=0.5, min_word_len=3, mode="bold-first"):
+def emphasise_text(text, bold_ratio=0.5, min_word_len=3, mode="bold-first"):
     """
-    Emphasize part of each alphabetic word.
+    Emphasise part of each alphabetic word.
     modes:
       - "bold-first": bolds the first bold_ratio of characters
-      - "micro-space": inserts thin spaces (U+2009) after the emphasized chunk
+      - "micro-space": inserts thin spaces (U+2009) after the emphasised chunk
     """
     words = re.split(r'(\W+)', text)  # keep punctuation & whitespace
     out = []
@@ -57,14 +36,14 @@ def emphasize_text(text, bold_ratio=0.5, min_word_len=3, mode="bold-first"):
 # -------- Streamlit UI --------
 st.title("Salient Reader")
 st.caption(
-    "An independent accessibility experiment that emphasizes portions of words to aid focus. "
-    "Not affiliated with or endorsed by any third-party brand or method."
+    "An independent accessibility experiment that emphasises portions of words to aid focus."
 )
 
-# File uploader (use keys so we can clear state safely on reset)
-uploaded_file = st.file_uploader("Upload a text, Word (.docx), or PDF file:", key="uploaded_file")
+uploaded_file = st.file_uploader(
+    "Upload a text, Word (.docx), or PDF file:", key="uploaded_file"
+)
 
-# Prepare the initial text value (from uploaded file if present)
+# Prepare initial text from uploaded file if present
 file_text = ""
 if uploaded_file is not None:
     file_type = uploaded_file.type
@@ -89,15 +68,21 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
 
-# Use session state-backed text area so we can reset it without calling experimental_rerun
+# Text area (session-backed so reset can clear it without rerun)
 initial_text = file_text if file_text else ""
-label = "File content" if file_text else "Paste or type text to emphasize:"
+label = "File content" if file_text else "Paste or type text to emphasise:"
 user_input = st.text_area(label, value=initial_text, height=200, key="user_input")
 
 # Controls
-mode = st.radio("Emphasis mode:", ["bold-first", "micro-space"], horizontal=True, key="mode")
-bold_ratio = st.slider("Portion of each word to emphasize:", 0.1, 0.9, 0.5, key="bold_ratio")
-min_word_len = st.slider("Minimum word length to modify:", 1, 10, 3, key="min_word_len")
+mode = st.radio(
+    "Emphasis mode:", ["bold-first", "micro-space"], horizontal=True, key="mode"
+)
+bold_ratio = st.slider(
+    "Portion of each word to emphasise:", 0.1, 0.9, 0.5, key="bold_ratio"
+)
+min_word_len = st.slider(
+    "Minimum word length to modify:", 1, 10, 3, key="min_word_len"
+)
 
 # Action buttons
 col1, col2 = st.columns(2)
@@ -109,28 +94,25 @@ with col2:
 if apply:
     text_val = st.session_state.get("user_input", "")
     if text_val and text_val.strip():
-        result = emphasize_text(text_val, bold_ratio=st.session_state.get("bold_ratio", bold_ratio), min_word_len=st.session_state.get("min_word_len", min_word_len), mode=st.session_state.get("mode", mode))
-        # markdown is fine for bold; micro-space renders as text
+        result = emphasise_text(
+            text_val,
+            bold_ratio=st.session_state.get("bold_ratio", bold_ratio),
+            min_word_len=st.session_state.get("min_word_len", min_word_len),
+            mode=st.session_state.get("mode", mode),
+        )
         st.markdown(result, unsafe_allow_html=True)
     else:
         st.warning("Please enter or upload some text first.")
 
 if reset:
-    # Selectively reset only the keys used by the app to avoid clearing other session data.
-    for k in ["uploaded_file", "user_input", "mode", "bold_ratio", "min_word_len"]:
-        if k in st.session_state:
-            # restore sensible defaults
-            if k == "uploaded_file":
-                st.session_state[k] = None
-            elif k == "user_input":
-                st.session_state[k] = ""
-            elif k == "mode":
-                st.session_state[k] = "bold-first"
-            elif k == "bold_ratio":
-                st.session_state[k] = 0.5
-            elif k == "min_word_len":
-                st.session_state[k] = 3
-
-# This file simply runs the app from app.py
-# Useful for environments that expect 'bionicreader.py' as the entry point.
-
+    # Reset only the keys used by this app (no rerun needed)
+    defaults = {
+        "uploaded_file": None,
+        "user_input": "",
+        "mode": "bold-first",
+        "bold_ratio": 0.5,
+        "min_word_len": 3,
+    }
+    for k, v in defaults.items():
+        st.session_state[k] = v
+    st.info("Inputs have been reset.")
