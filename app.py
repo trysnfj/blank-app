@@ -39,6 +39,9 @@ st.caption(
     "An independent accessibility experiment that emphasises portions of words to aid focus."
 )
 
+# Disclaimer
+st.markdown("**Disclaimer:** This app is an independent accessibility experiment and is not affiliated with or endorsed by any third-party brand or method.")
+
 uploaded_file = st.file_uploader(
     "Upload a text, Word (.docx), or PDF file:", key="uploaded_file"
 )
@@ -113,5 +116,9 @@ if reset:
         "bold_ratio": 0.5,
         "min_word_len": 3,
     }
+    for k, v in defaults.items():
+        st.session_state[k] = v
+    st.info("Inputs have been reset.")
+
 
 
