@@ -98,4 +98,3 @@ if reset:
     # Option 2: clear all session state (simple replacement for experimental_rerun())
     # This avoids calling st.experimental_rerun() while resetting the app state.
     st.session_state.clear()
-
