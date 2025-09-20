@@ -1,17 +1,6 @@
 import streamlit as st
 
-# Defensive safety: replace experimental_rerun with a no-op when present.
-# This prevents AttributeError or crashes if older/deployed code calls
-# st.experimental_rerun() in contexts where it's unsupported.
-try:
-    if hasattr(st, "experimental_rerun"):
-        def _safe_experimental_rerun(*a, **kw):
-            # intentionally do nothing — prefer clearing session state or safe behavior
-            return None
-        st.experimental_rerun = _safe_experimental_rerun
-except Exception:
-    # best-effort: if anything goes wrong here, continue without breaking import
-    pass
+# ...existing code...
 import re
 import PyPDF2
 
@@ -108,7 +97,18 @@ if apply:
         st.warning("Please enter or upload some text first.")
 
 if reset:
-    # Option 2: clear all session state (simple replacement for experimental_rerun())
-    # This avoids calling st.experimental_rerun() while resetting the app state.
-    st.session_state.clear()
+    # Selectively reset only the keys used by the app to avoid clearing other session data.
+    for k in ["uploaded_file", "user_input", "mode", "bold_ratio", "min_word_len"]:
+        if k in st.session_state:
+            # restore sensible defaults
+            if k == "uploaded_file":
+                st.session_state[k] = None
+            elif k == "user_input":
+                st.session_state[k] = ""
+            elif k == "mode":
+                st.session_state[k] = "bold-first"
+            elif k == "bold_ratio":
+                st.session_state[k] = 0.5
+            elif k == "min_word_len":
+                st.session_state[k] = 3
 
